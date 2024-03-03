@@ -592,18 +592,89 @@ export type Player = {
 };
 
 /**
+ * Get the player id from a player name (if it exists)
+ * @param name the name of the player
+ * @returns the player id, or undefined if no such player exists
+ */
+export function lookupPlayerIdFromName(name: string): number | undefined {
+  const playerId = getPlayerId(name);
+  // KoLmafia returns the input when not found
+  if (playerId === name) return undefined;
+  return parseInt(playerId);
+}
+
+/**
+ * Get the player id from a player name (if it exists)
+ * @param name the name of the player
+ * @returns the player id, or throws if no such player exists
+ */
+export function getPlayerIdFromName(name: string): number {
+  const playerId = lookupPlayerIdFromName(name);
+  if (playerId === undefined) {
+    throw new Error(`Player not found: ${name}`);
+  }
+  return playerId;
+}
+
+/**
+ * Get the player name from a player id (if it exists)
+ * @param id the id of the player
+ * @returns the player name, or undefined if no such player exists
+ */
+export function lookupPlayerNameFromId(id: number): string | undefined {
+  const playerName = getPlayerName(id);
+  // KoLmafia returns the input when not found
+  if (playerName === id.toString()) return undefined;
+  return playerName;
+}
+
+/**
+ * Get the player name from a player id
+ * @param id the id of the player
+ * @returns the player name, or throws if no such player exists
+ */
+export function getPlayerNameFromId(id: number): string {
+  const playerName = lookupPlayerNameFromId(id);
+  if (playerName === undefined) {
+    throw new Error(`Player not found: ${id}`);
+  }
+  return playerName;
+}
+
+/**
+ * Get both the name and id of a player from either their name or id
+ *
+ * @param idOrName Id or name of player
+ * @returns Object containing id and name of player, or undefined if not found
+ */
+export function lookupPlayerFromIdOrName(
+  idOrName: number | string
+): Player | undefined {
+  if (typeof idOrName === "number") {
+    const name = lookupPlayerNameFromId(idOrName);
+    if (name === undefined) return undefined;
+    return { name, id: idOrName };
+  } else {
+    const id = lookupPlayerIdFromName(idOrName);
+    if (id === undefined) return undefined;
+    // load from KoLmafia to get the right capitalization
+    const name = getPlayerName(id);
+    return { name, id };
+  }
+}
+
+/**
  * Get both the name and id of a player from either their name or id
  *
  * @param idOrName Id or name of player
  * @returns Object containing id and name of player
  */
 export function getPlayerFromIdOrName(idOrName: number | string): Player {
-  const id =
-    typeof idOrName === "number" ? idOrName : parseInt(getPlayerId(idOrName));
-  return {
-    name: getPlayerName(id),
-    id: id,
-  };
+  const player = lookupPlayerFromIdOrName(idOrName);
+  if (player === undefined) {
+    throw new Error(`Player not found: ${idOrName}`);
+  }
+  return player;
 }
 
 /**
